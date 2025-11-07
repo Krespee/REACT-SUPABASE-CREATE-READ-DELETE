@@ -23,3 +23,39 @@ export async function listDocumentosAll({ q, from, to }) {
   const { data, error } = await query;
   return { rows: data ?? [], error };
 }
+
+export async function crearDocumento({ expediente_id, file, titulo }) {
+  try {
+    const ext = file.name.split('.').pop();
+    const filename = `${crypto.randomUUID()}.${ext}`;
+
+    const { error: uploadErr } = await supabase.storage
+      .from("documentos")
+      .upload(filename, file);
+
+    if (uploadErr) return { error: uploadErr };
+
+    const { data, error } = await supabase
+      .from("documentos")
+      .insert({
+        expediente_id,
+        titulo: titulo || null,
+        path: filename,            
+        content_type: file.type,
+        size: file.size,
+      });
+
+    return { data, error };
+  } catch (err) {
+    return { error: err };
+  }
+}
+
+export async function getSignedUrl(path) {
+  const { data, error } = await supabase
+    .storage
+    .from("documentos")
+    .createSignedUrl(path, 60 * 5); // válido 5 minutos
+
+  return { url: data?.signedUrl ?? null, error };
+}

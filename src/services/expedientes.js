@@ -1,4 +1,4 @@
-// src/services/expedientes.js
+
 import { supabase } from "../lib/supabase";
 
 export async function createExpediente(input) {
@@ -16,7 +16,7 @@ export async function createExpediente(input) {
     .single();
 }
 
-/** ✅ Cuenta expedientes (para paginado) */
+
 export async function countExpedientes(q) {
   let base = supabase
     .from("expedientes")
@@ -30,7 +30,7 @@ export async function countExpedientes(q) {
   return { count: count ?? 0, error };
 }
 
-/** ✅ Lista expedientes paginados */
+
 export async function listExpedientes({ q, from, to }) {
   let query = supabase
     .from("expedientes")
@@ -50,7 +50,7 @@ export async function listExpedientes({ q, from, to }) {
   };
 }
 
-/** ✅ Obtener expediente por ID */
+
 export async function getExpediente(id) {
   return supabase
     .from("expedientes")
@@ -59,7 +59,7 @@ export async function getExpediente(id) {
     .maybeSingle();
 }
 
-/** ✅ Crear movimiento */
+
 export async function addMovimiento({ expediente_id, tipo, descripcion }) {
   return supabase
     .from("movimientos")
@@ -67,7 +67,6 @@ export async function addMovimiento({ expediente_id, tipo, descripcion }) {
       expediente_id,
       tipo: tipo || null,
       descripcion,
-      // creado_por se llena solo si default = auth.uid()
     })
     .select("id")
     .single();

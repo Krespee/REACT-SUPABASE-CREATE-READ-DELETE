@@ -43,17 +43,16 @@ export default function AuthProvider({ children }) {
       }
     })();
 
-    // cambios de sesión (login/logout/refresh)
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_evt, newSession) => {
-      // igual: no esperamos perfil
+
       setSession(newSession ?? null);
       setLoading(false);
       loadProfile(newSession?.user?.id);
     });
 
-    // re-sync al volver al foco (por si cambió en otra pestaña)
     const onVisible = async () => {
       if (document.visibilityState !== "visible") return;
       const { data } = await supabase.auth.getSession();
@@ -71,7 +70,6 @@ export default function AuthProvider({ children }) {
   }, []);
 
   const signIn = async ({ email, password }) => {
-    // no bloqueamos la UI por el perfil
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { data: null, error };
     setSession(data.session);

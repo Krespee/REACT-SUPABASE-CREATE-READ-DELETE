@@ -30,7 +30,7 @@ export default function Expedientes() {
       setLoading(true);
       setErr(null);
 
-      // 1) contar
+      // total
       const { count: totalCount, error: countErr } = await countExpedientes(q);
       if (!active) return;
       if (countErr) {
@@ -40,7 +40,7 @@ export default function Expedientes() {
       }
       setCount(totalCount);
 
-      // 2) listar paginado
+      // página
       const { rows: data, error } = await listExpedientes({
         q,
         from: range.from,
@@ -49,7 +49,7 @@ export default function Expedientes() {
       if (!active) return;
 
       if (error) setErr(error.message);
-      setRows(data);
+      setRows(data || []);
       setLoading(false);
     })();
 
@@ -57,6 +57,12 @@ export default function Expedientes() {
   }, [q, page, range.from, range.to]);
 
   const totalPages = Math.max(1, Math.ceil(count / PAGE_SIZE));
+
+  const copyId = async (id) => {
+    try {
+      await navigator.clipboard.writeText(String(id));
+    } catch (_) {}
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -92,26 +98,39 @@ export default function Expedientes() {
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50 text-left">
             <tr>
-              <th className="px-3 py-2">#</th>
+              <th className="px-3 py-2">ID</th>
+              <th className="px-3 py-2">Número</th>
               <th className="px-3 py-2">Carátula</th>
               <th className="px-3 py-2">Estado</th>
               <th className="px-3 py-2">Juzgado</th>
               <th className="px-3 py-2">Creado</th>
-              <th className="px-3 py-2"></th>
+              <th className="px-3 py-2 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td className="px-3 py-4" colSpan={6}>Cargando…</td>
+                <td className="px-3 py-4" colSpan={7}>Cargando…</td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td className="px-3 py-4" colSpan={6}>Sin resultados.</td>
+                <td className="px-3 py-4" colSpan={7}>Sin resultados.</td>
               </tr>
             ) : (
               rows.map((e) => (
                 <tr key={e.id} className="border-t">
+                  <td className="px-3 py-2 text-gray-700">
+                    <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded">
+                      #{e.id}
+                    </span>
+                    <button
+                      onClick={() => copyId(e.id)}
+                      title="Copiar ID"
+                      className="ml-2 text-xs underline cursor-pointer"
+                    >
+                      Copiar
+                    </button>
+                  </td>
                   <td className="px-3 py-2 font-medium">{e.numero}</td>
                   <td className="px-3 py-2">{e.caratula}</td>
                   <td className="px-3 py-2">{e.estado}</td>
@@ -120,35 +139,41 @@ export default function Expedientes() {
                     {new Date(e.created_at).toLocaleString()}
                   </td>
                   <td className="px-3 py-2 text-right">
-                    <Link to={`/expedientes/${e.id}`} className="text-black underline">
-                      Ver
-                    </Link>
-                  </td>
-                  <td className="px-3 py-2 text-right">
-
-                    {canDelete && (
-                      <button
-                        onClick={async () => {
-                          if (!confirm("¿Eliminar expediente y sus datos asociados?")) return;
-                          const { error } = await supabase.from("expedientes").delete().eq("id", e.id);
-                          if (error) alert(error.message);
-                          else setRows(prev => prev.filter(r => r.id !== e.id));
-                        }}
-                        className="text-red-600 underline cursor-pointer"
+                    <div className="flex items-center gap-3 justify-end">
+                      <Link
+                        to={`/expedientes/${e.id}`}
+                        className="text-black underline"
+                        title="Ver expediente"
                       >
-                        Eliminar
-                      </button>
-                    )}
+                        Ver
+                      </Link>
+
+                      {canDelete && (
+                        <button
+                          onClick={async () => {
+                            if (!confirm("¿Eliminar expediente y sus datos asociados?")) return;
+                            const { error } = await supabase
+                              .from("expedientes")
+                              .delete()
+                              .eq("id", e.id);
+                            if (error) alert(error.message);
+                            else setRows(prev => prev.filter(r => r.id !== e.id));
+                          }}
+                          className="text-red-600 underline cursor-pointer"
+                          title="Eliminar"
+                        >
+                          Eliminar
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-        
       </div>
 
-      {/* Paginado */}
       <div className="mt-4 flex items-center justify-between">
         <div className="text-sm text-gray-600">
           {count} resultado{count === 1 ? "" : "s"} • Página {page} de {totalPages}

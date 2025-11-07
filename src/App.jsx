@@ -11,6 +11,7 @@ import NuevoExpediente from "./pages/NuevoExpediente";
 import Expediente from "./pages/Expediente";
 import Audiencias from "./pages/Audiencias";
 import Documentos from "./pages/Documentos";
+import NuevoDocumento from "./pages/NuevoDocumento";
 
 export default function App() {
   return (
@@ -85,7 +86,16 @@ export default function App() {
             }
           />
 
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route
+            path="/documentos/nuevo"
+            element={
+              <ProtectedRoute>
+                <NuevoDocumento />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* <Route path="*" element={<Navigate to="/dashboard" replace />} /> */}
 
         </Routes>
 

@@ -25,7 +25,7 @@ export default function Header() {
           Nuevo
         </Link>
 
-        {/* ✅ NUEVOS LINKS */}
+
         <Link to="/audiencias" className="text-gray-700 hover:text-blue-600 font-medium">
           Audiencias
         </Link>

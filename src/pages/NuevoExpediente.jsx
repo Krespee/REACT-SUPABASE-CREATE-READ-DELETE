@@ -17,7 +17,7 @@ export default function NuevoExpediente() {
   const [err, setErr] = useState(null);
   const navigate = useNavigate();
 
-  // ✅ cargar oficinas tipo "juzgado"
+
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { countDocumentos, listDocumentosAll } from "../services/documentos";
+import { countDocumentos, listDocumentosAll, getSignedUrl } from "../services/documentos";
+import { useNavigate } from "react-router-dom";
 
 const PAGE_SIZE = 10;
 
@@ -11,6 +12,8 @@ export default function Documentos() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
 
+  const navigate = useNavigate();
+
   const range = useMemo(() => {
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
@@ -20,14 +23,20 @@ export default function Documentos() {
   useEffect(() => {
     let active = true;
     (async () => {
-      setLoading(true); setErr(null);
+      setLoading(true); 
+      setErr(null);
 
       const { count: total, error: cErr } = await countDocumentos({ q });
       if (!active) return;
       if (cErr) { setErr(cErr.message); setLoading(false); return; }
       setCount(total);
 
-      const { rows: data, error } = await listDocumentosAll({ q, from: range.from, to: range.to });
+      const { rows: data, error } = await listDocumentosAll({
+        q,
+        from: range.from,
+        to: range.to
+      });
+
       if (!active) return;
       if (error) setErr(error.message);
       setRows(data);
@@ -39,9 +48,25 @@ export default function Documentos() {
 
   const totalPages = Math.max(1, Math.ceil(count / PAGE_SIZE));
 
+  async function handleDownload(d) {
+    const { url, error } = await getSignedUrl(d.path);
+    if (error) return alert(error.message);
+    window.open(url, "_blank");
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-semibold mb-4">Documentos</h1>
+
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">Documentos</h1>
+
+        <button
+          onClick={() => navigate("/documentos/nuevo")}
+          className="rounded-lg bg-black text-white px-4 py-2 hover:opacity-90"
+        >
+          + Cargar documento
+        </button>
+      </div>
 
       <div className="mb-4">
         <input
@@ -52,7 +77,11 @@ export default function Documentos() {
         />
       </div>
 
-      {err && <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3">{err}</div>}
+      {err && (
+        <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3">
+          {err}
+        </div>
+      )}
 
       <div className="overflow-x-auto border rounded-lg bg-white">
         <table className="min-w-full text-sm">
@@ -63,13 +92,14 @@ export default function Documentos() {
               <th className="px-3 py-2">Tipo</th>
               <th className="px-3 py-2">Tamaño</th>
               <th className="px-3 py-2">Fecha</th>
+              <th className="px-3 py-2 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} className="px-3 py-4">Cargando…</td></tr>
+              <tr><td colSpan={6} className="px-3 py-4">Cargando…</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={5} className="px-3 py-4">Sin resultados.</td></tr>
+              <tr><td colSpan={6} className="px-3 py-4">Sin resultados.</td></tr>
             ) : rows.map(d => (
               <tr key={d.id} className="border-t">
                 <td className="px-3 py-2">#{d.expediente_id}</td>
@@ -77,6 +107,14 @@ export default function Documentos() {
                 <td className="px-3 py-2">{d.content_type || "—"}</td>
                 <td className="px-3 py-2">{d.size ? `${(Number(d.size)/1024).toFixed(1)} KB` : "—"}</td>
                 <td className="px-3 py-2">{new Date(d.created_at).toLocaleString()}</td>
+                <td className="px-3 py-2 text-right">
+                  <button
+                    onClick={() => handleDownload(d)}
+                    className="text-blue-600 underline cursor-pointer"
+                  >
+                    Descargar
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

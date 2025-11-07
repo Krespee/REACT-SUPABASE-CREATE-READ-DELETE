@@ -15,7 +15,7 @@ export default function NuevaAudiencia({ expedienteId, onCreated }) {
     if (!fecha || !hora) return setErr("Fecha y hora son obligatorias.");
     setLoading(true);
 
-    const fecha_hora = `${fecha}T${hora}:00`; // local
+    const fecha_hora = `${fecha}T${hora}:00`; 
     const { error } = await createAudiencia({
       expediente_id: Number(expedienteId),
       fecha_hora,
